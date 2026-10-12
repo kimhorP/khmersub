@@ -31,8 +31,22 @@ uv sync            # or: pip install -r <(uv export --no-hashes)
 ## First run
 
 ```bash
-python scripts/init_dirs.py   # creates video/, audio/, srt/ and .env
-# edit .env and set GEMINI_API_KEY=<your key>
+uv run python scripts/init_dirs.py   # creates video/, audio/, srt/ and .env
+```
+
+`.env` is a local record/template of the required variables (copied from
+`.env.example`); the app reads the actual values from your **environment**.
+Set them there:
+
+```bash
+# Windows (persists across shells)
+setx GEMINI_API_KEY <your key>
+
+# bash (current session only)
+export GEMINI_API_KEY=<your key>
+
+# or load the whole .env into the environment
+set -a; source .env; set +a
 ```
 
 `.env.example` documents the available variables:
@@ -42,16 +56,18 @@ python scripts/init_dirs.py   # creates video/, audio/, srt/ and .env
 | `GEMINI_API_KEY`| — (required for SRT)| Gemini API key                 |
 | `GEMINI_MODEL`  | `gemini-3.8-flash`  | Gemini model used for SRT mode |
 
-> The app reads the key from the environment — export it or use
-> `setx GEMINI_API_KEY <key>` on Windows. Never commit `.env`.
+> Never commit `.env`.
 
 ## Usage
 
 ```bash
-python main.py                      # interactive menu (recommended)
-python -m khmersub.audio            # CLI: extract audio from every video in video/
-python -m khmersub.transcribe       # CLI: transcribe audio/ to .srt (sentence-level)
+uv run python main.py                      # interactive menu (recommended)
+uv run python -m khmersub.audio            # CLI: extract audio from every video in video/
+uv run python -m khmersub.transcribe       # CLI: transcribe audio/ to .srt (sentence-level)
 ```
+
+> Bare `python` works too if you activate the venv first:
+> `.venv\Scripts\activate` on Windows or `source .venv/bin/activate` on Unix.
 
 In the menu:
 
@@ -65,6 +81,7 @@ In the menu:
 .
 ├── main.py                  # entry point: menu + flows
 ├── khmersub/                # application package
+│   ├── __init__.py
 │   ├── audio.py             # ffmpeg extraction
 │   ├── transcribe.py        # Gemini API + SRT parsing
 │   ├── srt_builder.py       # word-level cue building
@@ -80,7 +97,7 @@ In the menu:
 ```
 
 Folders marked *gitignored* are not shipped with the repository; run
-`python scripts/init_dirs.py` after cloning to recreate them.
+`uv run python scripts/init_dirs.py` after cloning to recreate them.
 
 `examples/sample_word.srt` is a **mock** file showing the expected output
 format — it is not a transcription of any real recording.
@@ -88,6 +105,6 @@ format — it is not a transcription of any real recording.
 ## Development
 
 ```bash
-python -m khmersub.transcribe --help   # module CLI sanity check
-printf '\n' | python main.py           # non-interactive smoke test
+uv run python -m khmersub.transcribe --help   # module CLI sanity check
+printf '\n' | uv run python main.py           # non-interactive smoke test
 ```
