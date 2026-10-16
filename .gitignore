@@ -20,6 +20,7 @@ srt/
 
 # Local docs (specs/plans stay on this machine)
 docs/
+.superpowers/
 
 # IDE / OS
 .idea/
