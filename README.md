@@ -31,32 +31,22 @@ uv sync            # or: pip install -r <(uv export --no-hashes)
 ## First run
 
 ```bash
-uv run python scripts/init_dirs.py   # creates video/, audio/, srt/ and .env
+uv run python scripts/init_dirs.py   # creates video/, audio/, srt/
 ```
 
-`.env` is a local record/template of the required variables (copied from
-`.env.example`); the app reads the actual values from your **environment**.
-Set them there:
+Set up your environment file:
 
 ```bash
-# Windows (persists across shells)
-setx GEMINI_API_KEY <your key>
-
-# bash (current session only)
-export GEMINI_API_KEY=<your key>
-
-# or load the whole .env into the environment
-set -a; source .env; set +a
+cp .env.example .env
 ```
 
 `.env.example` documents the available variables:
 
 | Variable        | Default             | Purpose                        |
 |-----------------|---------------------|--------------------------------|
-| `GEMINI_API_KEY`| — (required for SRT)| Gemini API key                 |
+| `GEMINI_API_KEY`| (required for SRT)| Gemini API key                 |
 | `GEMINI_MODEL`  | `gemini-3.8-flash`  | Gemini model used for SRT mode |
 
-> Never commit `.env`.
 
 ## Usage
 
@@ -75,36 +65,32 @@ In the menu:
 2. **Generate word-by-word SRT from audio/** — pick an audio file, get
    `srt/<name>.srt` with word-level cues.
 
-## Folder structure
+## How it works
 
+`video/` → **ffmpeg** → `audio/*.mp3` → **Gemini** → sentence-level SRT →
+[khmercut](https://pypi.org/project/khmercut/) → word-level SRT in `srt/`.
+
+## Example output
+
+Each cue holds a single word, so captions pop in one at a time:
+
+```srt
+1
+00:00:00,000 --> 00:00:00,720
+សួស្តី
+
+2
+00:00:00,720 --> 00:00:01,680
+មិត្តភក្តិ
+
+3
+00:00:01,680 --> 00:00:02,640
+ទាំងអស់គ្នា
+
+4
+00:00:02,640 --> 00:00:04,000
+សូមស្វាគមន៍
 ```
-.
-├── main.py                  # entry point: menu + flows
-├── khmersub/                # application package
-│   ├── __init__.py
-│   ├── audio.py             # ffmpeg extraction
-│   ├── transcribe.py        # Gemini API + SRT parsing
-│   ├── srt_builder.py       # word-level cue building
-│   └── ui.py                # banner, prompts, console helpers
-├── scripts/
-│   └── init_dirs.py         # creates video/, audio/, srt/, .env
-├── examples/
-│   └── sample_word.srt      # mock example of word-level output
-├── video/                   # ← you put videos here (gitignored)
-├── audio/                   # generated MP3s (gitignored)
-├── srt/                     # generated subtitles (gitignored)
-└── .env                     # your API key (gitignored — see .env.example)
-```
 
-Folders marked *gitignored* are not shipped with the repository; run
-`uv run python scripts/init_dirs.py` after cloning to recreate them.
-
-`examples/sample_word.srt` is a **mock** file showing the expected output
-format — it is not a transcription of any real recording.
-
-## Development
-
-```bash
-uv run python -m khmersub.transcribe --help   # module CLI sanity check
-printf '\n' | uv run python main.py           # non-interactive smoke test
-```
+("Hello / friends / everyone / welcome" — see
+`examples/sample_word.srt` for the full sample.)
